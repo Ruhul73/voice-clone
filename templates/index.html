@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoClone AI - Premium Voice Cloning Tool</title>
+    <!-- Modern Typography: Outfit & Inter from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style Sheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="glass-bg-glow"></div>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
+                <h1>EchoClone <span>AI</span></h1>
+            </div>
+            <p class="subtitle">Clone any voice in seconds and make it speak anything you want</p>
+        </header>
+
+        <!-- Main Layout -->
+        <main class="main-layout">
+            
+            <!-- Left Panel: Reference Voice Input -->
+            <section class="panel left-panel">
+                <div class="panel-header">
+                    <span class="step-badge">1</span>
+                    <h2>Reference Voice</h2>
+                </div>
+                <p class="panel-desc">Record 10-15 seconds of clear, natural speech (no background noise) for the best voice match, or upload an audio file.</p>
+
+                <!-- Tabs for Input Method -->
+                <div class="tabs">
+                    <button class="tab-btn active" id="tab-record">
+                        <i class="fa-solid fa-microphone"></i> Record Voice
+                    </button>
+                    <button class="tab-btn" id="tab-upload">
+                        <i class="fa-solid fa-upload"></i> Upload File
+                    </button>
+                </div>
+
+                <!-- Tab Content 1: Recorder -->
+                <div class="tab-content active" id="content-record">
+                    <div class="recorder-card">
+                        <div class="visualizer-container">
+                            <!-- Visual Wave Animation during Recording -->
+                            <div class="audio-wave" id="audio-wave">
+                                <span></span><span></span><span></span><span></span><span></span>
+                                <span></span><span></span><span></span><span></span><span></span>
+                                <span></span><span></span><span></span><span></span><span></span>
+                            </div>
+                            <div class="timer" id="recording-timer">00:00</div>
+                        </div>
+
+                        <div class="recorder-controls">
+                            <button class="record-btn" id="btn-record-toggle" title="Record Voice">
+                                <div class="mic-circle">
+                                    <i class="fa-solid fa-microphone mic-icon"></i>
+                                </div>
+                            </button>
+                            <p class="record-status-text" id="record-status">Click to start recording</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content 2: File Upload -->
+                <div class="tab-content" id="content-upload">
+                    <div class="upload-zone" id="drop-zone">
+                        <input type="file" id="file-input" accept="audio/*" hidden>
+                        <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                        <p class="upload-text">Drag & drop your voice file here or <span>browse</span></p>
+                        <p class="upload-limit">Supports MP3, WAV, M4A, WEBM (Max 10MB)</p>
+                    </div>
+                    <div class="selected-file-badge" id="selected-file-info" style="display: none;">
+                        <i class="fa-solid fa-file-audio"></i>
+                        <span id="selected-file-name">filename.mp3</span>
+                        <button id="btn-remove-file"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+
+                <!-- Reference Audio Player (for reviewing recorded/uploaded voice) -->
+                <div class="ref-audio-preview" id="ref-audio-preview" style="display: none;">
+                    <div class="preview-header">
+                        <i class="fa-solid fa-waveform"></i>
+                        <span>Voice Sample Preview</span>
+                    </div>
+                    <audio id="ref-audio-player" controls></audio>
+                </div>
+
+                <!-- Transcript Input (REQUIRED) -->
+                <div class="input-group">
+                    <label for="ref-text">
+                        <i class="fa-solid fa-quote-left icon-accent"></i> 
+                        What was said in the voice sample? <span class="required">*</span>
+                    </label>
+                    <textarea id="ref-text" placeholder="Type the EXACT words spoken in your reference audio. (e.g. 'Hello, this is a sample of my voice recorded for cloning.')" rows="3" required></textarea>
+                    <div class="input-helper">The AI model requires the transcript of the reference audio to match perfectly for accurate voice similarity. Avoid background noise.</div>
+                </div>
+
+                <!-- Fish Audio API Key (Optional) -->
+                <div class="input-group">
+                    <label for="fish-api-key">
+                        <i class="fa-solid fa-key icon-accent"></i>
+                        Fish Audio API Key <span class="optional-badge">(Optional - For Instant Cloning)</span>
+                    </label>
+                    <input type="password" id="fish-api-key" placeholder="Enter your fish.audio API Key..." autocomplete="off">
+                    <div class="input-helper">Get a free API key from <a href="https://fish.audio/go-api" target="_blank" style="color: var(--accent-purple); text-decoration: underline;">fish.audio</a> to generate in 1-2 seconds (500 free generations/month). Otherwise, free Hugging Face fallback will be used (~60-90s).</div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Synthesis -->
+            <section class="panel right-panel">
+                <div class="panel-header">
+                    <span class="step-badge">2</span>
+                    <h2>Target Speech Text</h2>
+                </div>
+                <p class="panel-desc">Enter the text you want your cloned voice to speak.</p>
+
+                <!-- Target Text Input -->
+                <div class="input-group full-height">
+                    <label for="gen-text">
+                        <i class="fa-solid fa-pen-nib icon-accent"></i>
+                        Text to Synthesize <span class="required">*</span>
+                    </label>
+                    <textarea id="gen-text" placeholder="Write whatever you want here... (e.g. 'Aapki clone ki hui voice ab bol rahi hai. Yeh tool bilkul sahi kaam kar raha hai!')" rows="8" required></textarea>
+                    <div class="char-count"><span id="char-counter">0</span> characters</div>
+                </div>
+
+                <!-- Synthesis Action Button -->
+                <div class="action-container">
+                    <button class="btn-generate" id="btn-generate" disabled>
+                        <span id="btn-text">
+                            <i class="fa-solid fa-circle-play"></i> Generate Cloned Speech
+                        </span>
+                        <div class="spinner" id="btn-spinner" style="display: none;"></div>
+                    </button>
+                </div>
+
+                <!-- Synthesis Progress & Output -->
+                <div class="output-container">
+                    <!-- Progress steps indicator -->
+                    <div class="progress-box" id="progress-box" style="display: none;">
+                        <div class="progress-step active" id="step-upload">
+                            <i class="fa-solid fa-circle-notch fa-spin step-icon"></i> Saving voice sample...
+                        </div>
+                        <div class="progress-step" id="step-connect">
+                            <i class="fa-regular fa-circle step-icon"></i> Connecting to AI model...
+                        </div>
+                        <div class="progress-step" id="step-synthesize">
+                            <i class="fa-regular fa-circle step-icon"></i> Generating cloned speech...
+                        </div>
+                    </div>
+
+                    <!-- Cloned Audio Player -->
+                    <div class="result-box" id="result-box" style="display: none;">
+                        <div class="result-header">
+                            <i class="fa-solid fa-circle-check success-icon"></i>
+                            <h3>Cloned Speech Output</h3>
+                        </div>
+                        
+                        <!-- Premium Custom Audio Player UI -->
+                        <div class="custom-audio-player">
+                            <audio id="output-audio-player" style="display: none;"></audio>
+                            <button class="player-btn" id="player-play-btn">
+                                <i class="fa-solid fa-play"></i>
+                            </button>
+                            <div class="player-progress-container">
+                                <div class="player-progress-bar" id="player-progress"></div>
+                            </div>
+                            <div class="player-time" id="player-time">00:00 / 00:00</div>
+                            <a href="#" class="player-btn-download" id="player-download-btn" download="cloned_speech.wav" title="Download Audio">
+                                <i class="fa-solid fa-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Main JS Application -->
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=3"></script>
+</body>
+</html>
